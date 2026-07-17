@@ -18,7 +18,7 @@ A multi-modal RAG (Retrieval-Augmented Generation) chat interface that lets you 
 
 > ⚠️ **You must start the backend before running the frontend.**
 
-This frontend connects to a multi-modal RAG agent API at `http://localhost:8000`. API calls are proxied through Next.js rewrites (`/api/backend/*` → `http://localhost:8000/*`), so the backend must be up before launching the dev server.
+This frontend connects directly to the multi-modal RAG agent API at `http://localhost:8000` by default. Set `NEXT_PUBLIC_BACKEND_URL` if your backend runs somewhere else. Backend requests use a 5 minute timeout.
 
 ```bash
 # Start the backend first
@@ -68,7 +68,7 @@ RAG-CHAT/
 │   ├── ChatMessage.tsx     # Individual message renderer
 │   └── UploadSidebar.tsx   # Knowledge base sidebar (PDF / URL / Video)
 ├── lib/                    # Utility functions / API helpers
-├── next.config.js          # Next.js config with backend proxy rewrites
+├── next.config.js          # Next.js config
 ├── tailwind.config.js      # Tailwind theme (custom colors, fonts, animations)
 ├── postcss.config.js
 ├── tsconfig.json
@@ -107,7 +107,7 @@ RAG-CHAT/
 
 ## Tech Stack
 
-- **Next.js 14** — React framework with App Router and API proxy rewrites
+- **Next.js 14** — React framework with App Router
 - **React 18** — UI library
 - **TypeScript** — Type-safe development
 - **Tailwind CSS** — Utility-first styling with custom theme
@@ -125,4 +125,4 @@ RAG-CHAT/
 → Next.js defaults to port 3000. If it's taken, pass a different port: `npm run dev -- -p 3001`.
 
 **No sources indexed after upload**
-→ Check the browser console and backend logs for connection or parsing errors. Confirm the proxy rewrite in `next.config.js` is pointing to the correct backend URL.
+→ Check the browser console and backend logs for connection or parsing errors. Confirm `NEXT_PUBLIC_BACKEND_URL` points to the correct backend URL if you changed it.
