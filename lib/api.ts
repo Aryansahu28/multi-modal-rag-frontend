@@ -37,6 +37,17 @@ export interface IndexedSource {
   addedAt: Date
 }
 
+export interface PDFIndexResponse {
+  status: 'indexing' | 'success' | 'partial_success' | 'error'
+  message: string
+  summary?: Record<string, string>
+  job_id?: string
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 export async function sendChat(message: string, threadId = 'default'): Promise<string> {
   const res = await fetchWithTimeout('/chat', {
     method: 'POST',
@@ -51,13 +62,50 @@ export async function sendChat(message: string, threadId = 'default'): Promise<s
   return data.response
 }
 
-export async function uploadPDFs(files: File[]): Promise<Record<string, string>> {
+export async function uploadPDFs(files: File[]): Promise<PDFIndexResponse> {
   const form = new FormData()
   files.forEach(f => form.append('files', f))
   const res = await fetchWithTimeout('/index/pdfs', { method: 'POST', body: form })
-  if (!res.ok) throw new Error('PDF upload failed')
-  const data = await res.json()
-  return data.summary ?? {}
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`PDF upload failed: ${err}`)
+  }
+  return res.json()
+}
+
+export async function getPDFIndexJob(jobId: string): Promise<PDFIndexResponse> {
+  const res = await fetchWithTimeout(`/index/pdfs/${jobId}`, { method: 'GET' })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`PDF indexing status failed: ${err}`)
+  }
+  return res.json()
+}
+
+export async function waitForPDFIndexJob(jobId: string): Promise<PDFIndexResponse> {
+  const startedAt = Date.now()
+  const timeoutMs = 30 * 60 * 1000
+
+  while (Date.now() - startedAt < timeoutMs) {
+    const data = await getPDFIndexJob(jobId)
+    if (data.status !== 'indexing') return data
+    await delay(2000)
+  }
+
+  throw new Error('PDF indexing is still running after 30 minutes')
+}
+
+export async function uploadAndWaitForPDFs(files: File[]): Promise<PDFIndexResponse> {
+  const data = await uploadPDFs(files)
+  if (data.status === 'indexing' && data.job_id) {
+    return waitForPDFIndexJob(data.job_id)
+  }
+
+  if (data.status === 'indexing') {
+    throw new Error('PDF indexing started, but the backend did not return a job id')
+  }
+
+  return data
 }
 
 export async function indexURL(url: string): Promise<{ status: string; message: string }> {

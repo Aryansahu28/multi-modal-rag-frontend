@@ -5,7 +5,7 @@ import {
   FileText, Link2, Video, Upload, X, CheckCircle2,
   AlertCircle, Loader2, ChevronRight, Cpu, Database
 } from 'lucide-react'
-import { uploadPDFs, indexURL, uploadVideo, IndexedSource } from '@/lib/api'
+import { uploadAndWaitForPDFs, indexURL, uploadVideo, IndexedSource } from '@/lib/api'
 
 interface Props {
   sources: IndexedSource[]
@@ -40,7 +40,7 @@ export default function UploadSidebar({ sources, onSourceAdded, onSourceRemove }
     setLoading(true); setError('')
     const pending = arr.map(f => addSource({ name: f.name, type: 'pdf', status: 'indexing' }))
     try {
-      const summary = await uploadPDFs(arr)
+      const { summary = {} } = await uploadAndWaitForPDFs(arr)
       pending.forEach((src, i) => {
         const msg = summary[arr[i].name] ?? ''
         const chunks = parseInt(msg.match(/\d+/)?.[0] ?? '0')
