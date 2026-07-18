@@ -34,3 +34,6 @@ next-env.d.ts
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Lock files
+package-lock.json
