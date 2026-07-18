@@ -1,5 +1,5 @@
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000'
-const REQUEST_TIMEOUT_MS = 5 * 60 * 1000
+const REQUEST_TIMEOUT_MS = 10 * 60 * 1000
 
 async function fetchWithTimeout(path: string, init: RequestInit): Promise<Response> {
   const controller = new AbortController()
@@ -12,7 +12,7 @@ async function fetchWithTimeout(path: string, init: RequestInit): Promise<Respon
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new Error('Request timed out after 5 minutes')
+      throw new Error('Request timed out after 10 minutes')
     }
     throw error
   } finally {
